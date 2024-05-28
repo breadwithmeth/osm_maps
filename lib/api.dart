@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 
 var URL_NOSM = 'nominatim.openstreetmap.org';
 // var URL_OSRM = 'router.project-osrm.org';
-var URL_OSRM = '10.8.0.2:5000';
+var URL_OSRM = '217.78.239.201:5000';
 
 var URL_YANDEX = 'geocode-maps.yandex.ru';
 Future<Map?> getCoordinatesFromText(String address) async {

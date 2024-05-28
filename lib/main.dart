@@ -3,7 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:osm_maps/api.dart';
 import 'package:latlong2/latlong.dart';
 import 'unpack_polyline.dart';
-
+import 'package:flutter_map_cancellable_tile_provider/flutter_map_cancellable_tile_provider.dart';
 void main() {
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
@@ -32,7 +32,7 @@ class _MainState extends State<Main> {
 
   List<Marker> _markers = [];
 
-  List<Widget> _dists = [];
+  List<Map> _dists = [];
 
   late Marker _store;
   late Marker _client;
@@ -167,12 +167,13 @@ class _MainState extends State<Main> {
                 Colors.purple,
                 Colors.orange
               ];
-              List<Widget> dists = [];
+              List<Map> dists = [];
               g_routes.forEach((element) {
-                dists.add(Text(
-                  element["distance"].toString() + "м",
-                  style: TextStyle(color: clrs[i]),
-                ));
+                dists.add({"dist": element["distance"], "color": clrs[i]});
+                // Text(
+                //   element["distance"].toString() + "м",
+                //   style: TextStyle(color: clrs[i]),
+                // )
                 dist = dist + element["distance"];
                 polylines.add(Polyline(
                     points:
@@ -327,10 +328,6 @@ class _MainState extends State<Main> {
                                 }),
                           ),
                           Flexible(child: Text(_dist.toString() + "м")),
-                          Flexible(
-                              child: Row(
-                            children: _dists,
-                          ))
                         ],
                       ),
                       Row(
@@ -386,6 +383,31 @@ class _MainState extends State<Main> {
                           itemBuilder: (BuildContext context, int index) {
                             return _objects[index];
                           })),
+                  Flexible(
+                      child: ListView.builder(
+                    primary: false,
+                    shrinkWrap: true,
+                    itemCount: _dists.length,
+                    itemBuilder: (context, index) {
+                      double dist = _dists[index]["dist"] / 1000;
+                      dist = (dist * 2).round() / 2;
+                      int price = 0;
+                      if (dist <= 1.5) {
+                        price = 700;
+                      } else {
+                        price = ((dist - 1.5) * 150 + 700).toInt();
+                      }
+                      return ListTile(
+                        leading: Icon(
+                          Icons.pin_drop,
+                          color: _dists[index]["color"],
+                        ),
+                        title: Text(_dists[index]["dist"].toString() + "м"),
+                        subtitle: Text(dist.toString() + "км"),
+                        trailing: Text(price.toString() + "тг"),
+                      );
+                    },
+                  ))
                 ],
               )),
               Flexible(
@@ -430,6 +452,7 @@ class _MainState extends State<Main> {
                               'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                           userAgentPackageName:
                               'dev.fleaflet.flutter_map.example',
+                          tileProvider: CancellableNetworkTileProvider(),
                           // Plenty of other options available!
                         ),
                         PolylineLayer(polylines: _polylines),
