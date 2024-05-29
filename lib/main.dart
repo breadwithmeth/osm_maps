@@ -1,9 +1,12 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:osm_maps/api.dart';
 import 'package:latlong2/latlong.dart';
 import 'unpack_polyline.dart';
 import 'package:flutter_map_cancellable_tile_provider/flutter_map_cancellable_tile_provider.dart';
+
 void main() {
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
@@ -29,22 +32,26 @@ class _MainState extends State<Main> {
   TextEditingController _corp = TextEditingController();
   int _dist = 0;
   List<Widget> _objects = [];
-
+  List<Widget> _routeWidgets = [];
   List<Marker> _markers = [];
 
   List<Map> _dists = [];
-
+  List<Map> _routes = [];
   late Marker _store;
   late Marker _client;
 
   List<Store> _stores = [
-    Store(1, "Горького 66/1", "Павлодар", LatLng(52.271643, 76.950011)),
-    Store(2, "Бекхожина 3/2", "Павлодар", LatLng(52.249676, 76.954269)),
-    Store(3, "Академика Сатпаева 21", "Павлодар", LatLng(52.293063, 76.942267)),
-    Store(4, "Толстого 90", "Павлодар", LatLng(52.276497, 76.975226)),
+    Store(1, "Горького 66/1", "Павлодар", LatLng(52.271643, 76.950011),
+        Colors.amber),
+    Store(2, "Бекхожина 3/2", "Павлодар", LatLng(52.249676, 76.954269),
+        Colors.teal),
+    Store(3, "Академика Сатпаева 21", "Павлодар", LatLng(52.293063, 76.942267),
+        Colors.deepPurple),
+    Store(4, "Толстого 90", "Павлодар", LatLng(52.276497, 76.975226),
+        Colors.blueGrey),
   ];
   Future<void> _getCoordinatesFromText() async {
-    String query = currentStore.city;
+    String query = "Павлодар ";
 
     if (_street.text.isNotEmpty) {
       query += ", " + _street.text;
@@ -56,86 +63,9 @@ class _MainState extends State<Main> {
       query += "/" + _corp.text;
     }
 
-    if (currentEngine == 2) {
-      Map? data = await getCoordinatesFromText(query);
-
-      List objects = [];
-      List<Widget> objectsAddr = [];
-      if (data?["features"] != null && data?["features"] != []) {
-        objects = data?["features"];
-        objects.forEach((element) {
-          print(element);
-          objectsAddr.add(GestureDetector(
-            onTap: () async {
-              Map? route = await getRoute(
-                currentStore.coordinates,
-                LatLng(
-                  element["geometry"]["coordinates"][1],
-                  element["geometry"]["coordinates"][0],
-                ),
-              );
-              List<Polyline> polylines = [];
-              List g_routes = route!["routes"];
-              int i = 0;
-              List<Color> clrs = [Colors.blue, Colors.pink, Colors.purple];
-              for (var element in g_routes) {
-                num dist = 0;
-
-                ++i;
-                dist = dist + element["distance"];
-                polylines.add(Polyline(
-                    points:
-                        decodePolyline(element["geometry"]).unpackPolyline(),
-                    color: clrs[i],
-                    strokeWidth: 15));
-              }
-              // setState(() {
-              //   _dist = dist.toInt();
-              //   _polylines = polylines;
-              //   print(dist);
-              // });
-              mapController.move(
-                  LatLng(
-                    element["geometry"]["coordinates"][1],
-                    element["geometry"]["coordinates"][0],
-                  ),
-                  15);
-              mapController.fitCamera(CameraFit.coordinates(coordinates: [
-                currentStore.coordinates,
-                LatLng(
-                  element["geometry"]["coordinates"][1],
-                  element["geometry"]["coordinates"][0],
-                ),
-              ], padding: EdgeInsets.all(90)));
-              setState(() {
-                _client = Marker(
-                    point: LatLng(
-                      element["geometry"]["coordinates"][1],
-                      element["geometry"]["coordinates"][0],
-                    ),
-                    child: Icon(
-                      Icons.person,
-                      color: Colors.purple,
-                      size: 32,
-                    ));
-              });
-            },
-            child: AddressObject(
-                coordinates: LatLng(
-                  element["geometry"]["coordinates"][1],
-                  element["geometry"]["coordinates"][0],
-                ),
-                display_name: element["properties"]["display_name"]),
-          ));
-        });
-      }
-
-      setState(() {
-        _objects = [];
-        _objects = objectsAddr;
-      });
-      mapController.move(LatLng(66, 72), 14);
-    }
+    setState(() {
+      currentEngine = 1;
+    });
 
     if (currentEngine == 1) {
       Map? data = await getCoordinatesFromTextYandex(query);
@@ -151,43 +81,101 @@ class _MainState extends State<Main> {
           double lon = double.parse(
               element["GeoObject"]["Point"]["pos"].toString().split(' ')[0]);
           print(lat);
-          objectsAddr.add(GestureDetector(
-            onTap: () async {
-              Map? route = await getRoute(
-                currentStore.coordinates,
-                LatLng(lat, lon),
-              );
+          objectsAddr.add(TextButton(
+            onPressed: () async {
+              AddressObject cl_add = AddressObject(
+                  coordinates: LatLng(lat, lon),
+                  display_name: element["GeoObject"]["name"]);
+
+              // Map? route = await getRoute(
+              //   _stores[0].coordinates,
+              //   LatLng(lat, lon),
+              // );
+              // Map? route1 = await getRoute(
+              //   _stores[1].coordinates,
+              //   LatLng(lat, lon),
+              // );
+              // Map? route2 = await getRoute(
+              //   _stores[2].coordinates,
+              //   LatLng(lat, lon),
+              // );
+              // Map? route3 = await getRoute(
+              //   _stores[3].coordinates,
+              //   LatLng(lat, lon),
+              // );
+              // List<Polyline> polylines = [];
+              // List g_routes = route!["routes"];
+              // num dist = 0;
+              // int i = 0;
+              // List<Color> clrs = [
+              //   Colors.blue,
+              //   Colors.pink,
+              //   Colors.purple,
+              //   Colors.orange
+              // ];
+              // List<Map> dists = [];
+              // g_routes.forEach((element) {
+              //   dists.add({"dist": element["distance"], "color": clrs[i]});
+              //   // Text(
+              //   //   element["distance"].toString() + "м",
+              //   //   style: TextStyle(color: clrs[i]),
+              //   // )
+              //   dist = dist + element["distance"];
+              //   polylines.add(Polyline(
+              //       points:
+              //           decodePolyline(element["geometry"]).unpackPolyline(),
+              //       color: clrs[i],
+              //       strokeWidth: 15));
+              //   i++;
+              // });
               List<Polyline> polylines = [];
-              List g_routes = route!["routes"];
-              num dist = 0;
-              int i = 0;
-              List<Color> clrs = [
-                Colors.blue,
-                Colors.pink,
-                Colors.purple,
-                Colors.orange
-              ];
-              List<Map> dists = [];
-              g_routes.forEach((element) {
-                dists.add({"dist": element["distance"], "color": clrs[i]});
-                // Text(
-                //   element["distance"].toString() + "м",
-                //   style: TextStyle(color: clrs[i]),
-                // )
-                dist = dist + element["distance"];
-                polylines.add(Polyline(
-                    points:
-                        decodePolyline(element["geometry"]).unpackPolyline(),
-                    color: clrs[i],
-                    strokeWidth: 15));
-                i++;
-              });
+
+              List<Map> routes = [];
+              List<Widget> routeWidgets = [];
               setState(() {
-                _dist = dist.toInt();
-                _polylines = polylines;
-                print(dist);
-                _dists = dists;
+                _routes = [];
               });
+              _stores.forEach((element) async {
+                await _getRoute(lat, lon, element).then((value) {
+                  Store st = value["store"];
+                  double dist = value["dist"];
+                  routes.add({"store": st, "dist": dist, "cl_add": cl_add});
+                  print(dist);
+                  print(st.color.toString());
+                  polylines.add(value["pl"]);
+                  setState(() {
+                    _routes.add({"store": st, "dist": dist});
+                  });
+                  // Store st = value["store"];
+                  // double dist = value["dist"] / 1000;
+                  // dist = (dist * 2).round() / 2;
+                  // int price = 0;
+                  // if (dist <= 1.5) {
+                  //   price = 700;
+                  // } else {
+                  //   if (dist < 5) {
+                  //     price = ((dist - 1.5) * 300 + 700).toInt();
+                  //   } else {
+                  //     price = ((dist - 1.5) * 250 + 700).toInt();
+                  //   }
+                  // }
+                  // routeWidgets.add(ListTile(
+                  //   title: Text(st.name + " - " + dist.toString() + "км"),
+                  //   subtitle: Text(price.toString()),
+                  // ));
+                });
+              });
+
+              setState(() {
+                // _dist = dist.toInt();
+                _polylines = polylines;
+                // print(dist);
+                // _dists = dists;
+              });
+              print(
+                  "==========================================================");
+              print(routes);
+
               mapController.move(LatLng(lat, lon), 15);
               mapController.fitCamera(CameraFit.coordinates(coordinates: [
                 currentStore.coordinates,
@@ -215,6 +203,34 @@ class _MainState extends State<Main> {
         mapController.move(LatLng(66, 72), 14);
       }
     }
+  }
+
+  Future<Map> _getRoute(double lat, double lon, Store store) async {
+    Map? route = await getRoute(
+      store.coordinates,
+      LatLng(lat, lon),
+    );
+    Polyline polyline = Polyline(points: []);
+    List g_routes = route!["routes"];
+    num dist = 0;
+
+    g_routes.forEach((element) {
+      if (dist == 0) {
+        dist = element["distance"];
+        polyline = Polyline(
+            points: decodePolyline(element["geometry"]).unpackPolyline(),
+            color: store.color,
+            strokeWidth: 15);
+      } else if (dist > element["distance"]) {
+        polyline = Polyline(
+            points: decodePolyline(element["geometry"]).unpackPolyline(),
+            color: store.color,
+            strokeWidth: 15);
+        dist = element["distance"];
+      }
+    });
+    print({"store": store, "dist": dist, "pl": polyline});
+    return {"store": store, "dist": dist, "pl": polyline};
   }
 
   @override
@@ -384,30 +400,44 @@ class _MainState extends State<Main> {
                             return _objects[index];
                           })),
                   Flexible(
+                      flex: 3,
                       child: ListView.builder(
-                    primary: false,
-                    shrinkWrap: true,
-                    itemCount: _dists.length,
-                    itemBuilder: (context, index) {
-                      double dist = _dists[index]["dist"] / 1000;
-                      dist = (dist * 2).round() / 2;
-                      int price = 0;
-                      if (dist <= 1.5) {
-                        price = 700;
-                      } else {
-                        price = ((dist - 1.5) * 150 + 700).toInt();
-                      }
-                      return ListTile(
-                        leading: Icon(
-                          Icons.pin_drop,
-                          color: _dists[index]["color"],
-                        ),
-                        title: Text(_dists[index]["dist"].toString() + "м"),
-                        subtitle: Text(dist.toString() + "км"),
-                        trailing: Text(price.toString() + "тг"),
-                      );
-                    },
-                  ))
+                        primary: false,
+                        shrinkWrap: true,
+                        itemCount: _routes.length,
+                        itemBuilder: (context, index) {
+                          double dist = _routes[index]["dist"] / 1000;
+                          dist = (dist * 2).round() / 2;
+                          int price = 0;
+                          if (dist <= 1.5) {
+                            price = 700;
+                          } else {
+                            if (dist < 5) {
+                              price = ((dist - 1.5) * 300 + 700).toInt();
+                            } else {
+                              price = ((dist - 1.5) * 250 + 700).toInt();
+                            }
+                          }
+                          Store st = _routes[index]["store"];
+                          return ListTile(
+                            leading: Icon(
+                              Icons.pin_drop,
+                              color: st.color,
+                            ),
+                            title: Row(
+                              children: [
+                                Text(
+                                  price.toString() + "тг",
+                                  style: TextStyle(fontWeight: FontWeight.w700),
+                                ),
+                                Icon(Icons.route),
+                                Text(st.name),
+                              ],
+                            ),
+                            subtitle: Text(dist.toString() + "км"),
+                          );
+                        },
+                      ))
                 ],
               )),
               Flexible(
@@ -453,9 +483,44 @@ class _MainState extends State<Main> {
                           userAgentPackageName:
                               'dev.fleaflet.flutter_map.example',
                           tileProvider: CancellableNetworkTileProvider(),
+                          tileBuilder: _darkModeTileBuilder,
+
                           // Plenty of other options available!
                         ),
                         PolylineLayer(polylines: _polylines),
+                        PolygonLayer(polygons: [
+                          Polygon(
+                              points: [
+                                LatLng(52.275750, 76.962053),
+                                LatLng(52.274855, 76.931884),
+                                LatLng(52.288173, 76.933815),
+                                LatLng(52.328685, 76.883817),
+                                LatLng(52.328685, 76.883817),
+                                LatLng(52.316904, 77.020287),
+                                LatLng(52.306593, 77.022691),
+                                LatLng(52.299227, 76.972566),
+                                LatLng(52.297333, 76.965013),
+                                LatLng(52.284280, 76.966729),
+                                LatLng(52.281438, 76.961279)
+                              ],
+                              color: Colors.pinkAccent.withOpacity(0.3),
+                              isFilled: true),
+                          Polygon(
+                              points: [
+                                LatLng(52.276120, 76.968639),
+                                LatLng(52.264721, 76.969562),
+                                LatLng(52.265116, 76.984582),
+                                LatLng(52.257216, 76.985376),
+                                LatLng(52.259533, 77.039621),
+                                LatLng(52.237670, 77.039363),
+                                LatLng(52.237670, 77.039363),
+                                LatLng(52.247470, 76.965549),
+                                LatLng(52.246206, 76.948898),
+                                LatLng(52.274857, 76.933620)
+                              ],
+                              isFilled: true,
+                              color: Colors.tealAccent.withOpacity(0.3))
+                        ]),
                         MarkerLayer(
                           markers: [_client, _store],
                         ),
@@ -475,8 +540,8 @@ class Store {
   final String name;
   final String city;
   final LatLng coordinates;
-
-  Store(this.id, this.name, this.city, this.coordinates);
+  final Color color;
+  Store(this.id, this.name, this.city, this.coordinates, this.color);
 }
 
 class AddressObject extends StatefulWidget {
@@ -493,4 +558,20 @@ class _AddressObjectState extends State<AddressObject> {
   Widget build(BuildContext context) {
     return Text(widget.display_name);
   }
+}
+
+Widget _darkModeTileBuilder(
+  BuildContext context,
+  Widget tileWidget,
+  TileImage tile,
+) {
+  return ColorFiltered(
+    colorFilter: const ColorFilter.matrix(<double>[
+      -0.2126, -0.7152, -0.0722, 0, 255, // Red channel
+      -0.2126, -0.7152, -0.0722, 0, 255, // Green channel
+      -0.2126, -0.7152, -0.0722, 0, 255, // Blue channel
+      0, 0, 0, 1, 0, // Alpha channel
+    ]),
+    child: tileWidget,
+  );
 }

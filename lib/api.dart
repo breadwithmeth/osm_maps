@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 var URL_NOSM = 'nominatim.openstreetmap.org';
 // var URL_OSRM = 'router.project-osrm.org';
 var URL_OSRM = '217.78.239.201:5000';
+// var URL_OSRM = 'osm.naliv.kz:5000';
 
 var URL_YANDEX = 'geocode-maps.yandex.ru';
 Future<Map?> getCoordinatesFromText(String address) async {
@@ -31,7 +32,7 @@ Future<Map?> getRoute(LatLng store, LatLng client) async {
   var url = Uri.http(
       URL_OSRM,
       "/route/v1/driving/$store2,$store1;$client2,$client1",
-      {"overview": "simplified", "steps": "true", "alternatives": "3"});
+      {"overview": "simplified", "steps": "true", "alternatives": "1"});
   var response = await http.get(url);
 
   // List<dynamic> list = json.decode(response.body);
